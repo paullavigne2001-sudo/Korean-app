@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apprendre le Coréen 🇰🇷</title>
+<style>
+body{font-family:Arial;margin:0;background:#111;color:#fff}
+header{padding:15px;text-align:center;background:#222;font-size:20px}
+button{margin:5px;padding:10px;border:none;border-radius:8px;background:#444;color:#fff}
+.container{padding:15px}
+.card{background:#222;padding:15px;border-radius:12px;margin:10px 0}
+.hidden{display:none}
+.progress{height:8px;background:#333;border-radius:5px;margin:10px 0}
+.bar{height:8px;background:#4caf50;width:0%;border-radius:5px}
+</style>
+</head>
+<body>
+<header>Apprendre le Coréen 🇰🇷</header>
+<div class="container" id="home">
+<h3>Modules</h3>
+<button onclick="openModule('salutations')">Salutations</button>
+<button onclick="openModule('numbers')">Chiffres</button>
+<button onclick="openModule('food')">Nourriture</button>
+<button onclick="openModule('hangeul')">Hangeul</button>
+</div>
+<div class="container hidden" id="module"></div>
+<script>
+const data={
+salutations:[{kr:'안녕하세요',ro:'annyeonghaseyo',fr:'bonjour'},{kr:'감사합니다',ro:'gamsahamnida',fr:'merci'}],
+numbers:[{kr:'하나',ro:'hana',fr:'1'},{kr:'둘',ro:'dul',fr:'2'}],
+food:[{kr:'밥',ro:'bap',fr:'riz'},{kr:'물',ro:'mul',fr:'eau'}]
+};
+let current=[];let index=0;let score=0;let streak=0;
+function speak(text,slow=false){
+let u=new SpeechSynthesisUtterance(text);
+u.lang='ko-KR';
+u.rate=slow?0.6:1;
+speechSynthesis.speak(u);
+}
+function openModule(name){
+document.getElementById('home').classList.add('hidden');
+const m=document.getElementById('module');
+m.classList.remove('hidden');
+if(name==='hangeul'){showHangeul();return;}
+current=data[name];
+m.innerHTML=`<h3>${name}</h3>
+<button onclick="lesson()">📖 Leçon</button>
+<button onclick="flashcards()">🃏 Flashcards</button>
+<button onclick="quiz()">🎯 Quiz</button>
+<button onclick="goHome()">⬅</button>`;
+}
+function goHome(){location.reload();}
+function lesson(){
+let html='<h3>Leçon</h3>';
+current.forEach(w=>{
+html+=`<div class="card">${w.kr} (${w.ro}) - ${w.fr}
+<button onclick="speak('${w.kr}')">🔊</button></div>`;
+});
+document.getElementById('module').innerHTML=html+backBtn();
+}
+function flashcards(){
+index=0;
+showCard();
+}
+function showCard(){
+let w=current[index];
+let html=`<h3>Flashcards</h3>
+<div class="card" onclick="flip()" id="card">${w.kr}</div>
+<button onclick="speak('${w.kr}')">🔊</button>
+<div class="progress"><div class="bar" style="width:${(index/current.length)*100}%"></div></div>
+<button onclick="nextCard()">Suivant</button>`;
+document.getElementById('module').innerHTML=html+backBtn();
+}
+function flip(){
+let w=current[index];
+document.getElementById('card').innerText=w.fr;
+}
+function nextCard(){
+index++;
+if(index>=current.length){alert('Terminé');goHome();}
+else showCard();
+}
+function quiz(){
+index=0;score=0;streak=0;
+nextQuestion();
+}
+function nextQuestion(){
+let w=current[index];
+let options=[w.fr,...shuffle(current).slice(0,2).map(x=>x.fr)];
+options=shuffle(options);
+let html=`<h3>Quiz 🎯</h3>
+<div class="card">${w.kr}</div>
+<button onclick="speak('${w.kr}')">🔊</button>`;
+options.forEach(o=>{
+html+=`<button onclick="answer('${o}')">${o}</button>`;
+});
+html+=`<p>Score:${score} | Série🔥:${streak}</p>`;
+document.getElementById('module').innerHTML=html+backBtn();
+speak(w.kr);
+}
+function answer(a){
+let w=current[index];
+if(a===w.fr){score++;streak++;}
+else{streak=0;speak(w.kr);alert('Correct:'+w.fr);}
+index++;
+if(index>=current.length){alert('Score final:'+score);goHome();}
+else nextQuestion();
+}
+function shuffle(arr){return arr.sort(()=>Math.random()-0.5)}
+function showHangeul(){
+let consonnes=['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ'];
+let voyelles=['ㅏ','ㅓ','ㅗ','ㅜ','ㅡ','ㅣ'];
+let html='<h3>Guide Hangeul 🔤</h3>';
+consonnes.forEach(l=>{
+html+=`<button onclick="speak('${l}')">${l}</button>`;
+});
+html+='<br>';
+voyelles.forEach(l=>{
+html+=`<button onclick="speak('${l}')">${l}</button>`;
+});
+document.getElementById('module').innerHTML=html+backBtn();
+}
+function backBtn(){return '<br><button onclick="goHome()">⬅ Retour</button>';}
+</script>
+</body>
+</html>
